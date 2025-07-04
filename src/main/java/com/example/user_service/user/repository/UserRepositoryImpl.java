@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.StringUtils;
 
 import com.example.user_service.user.domain.QUser;
@@ -67,7 +68,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 			.execute();
 
 		if (updateRows == 0) {
-			throw new IllegalArgumentException("유저를 찾을 수 없습니다.");
+			throw new UsernameNotFoundException("유저를 찾을 수 없습니다.");
 		}
 
 		return queryFactory
