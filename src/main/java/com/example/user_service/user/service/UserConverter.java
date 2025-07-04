@@ -9,6 +9,7 @@ public class UserConverter {
 			.name(request.getName())
 			.email(request.getEmail())
 			.password(request.getPassword())
+			.viewCount(0L)
 			.build();
 	}
 
