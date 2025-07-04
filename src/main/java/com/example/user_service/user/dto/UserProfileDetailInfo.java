@@ -25,6 +25,6 @@ public class UserProfileDetailInfo {
 		private Long userId;
 		private String name;
 		private long viewCount;
-		private LocalDateTime localDateTime;
+		private LocalDateTime createdAt;
 	}
 } 
