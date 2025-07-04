@@ -50,11 +50,15 @@ public class User {
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
+	@Column(nullable = false)
+	private long viewCount = 0;
+
 	@Builder
-	public User(String name, String email, String password) {
+	public User(String name, String email, String password, long viewCount) {
 		this.name = name;
 		this.email = email;
 		this.password = password;
+		this.viewCount = viewCount;
 	}
 
 	@OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
