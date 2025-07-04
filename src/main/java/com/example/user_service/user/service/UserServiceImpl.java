@@ -1,11 +1,15 @@
 package com.example.user_service.user.service;
 
+import static com.example.user_service.user.dto.UserProfileInfo.*;
+import static com.example.user_service.user.dto.UserRegisterInfo.*;
 import static com.example.user_service.user.service.UserConverter.*;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.user_service.user.domain.User;
-import com.example.user_service.user.dto.UserRegisterInfo;
 import com.example.user_service.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -18,10 +22,21 @@ public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
 
+	/**
+	 * 회원가입 요청
+	 * @param request
+	 * @return
+	 */
 	@Override
-	public UserRegisterInfo.UserRegisterResponse saveUser(UserRegisterInfo.UserRegisterRequest request) {
+	@Transactional
+	public UserRegisterResponse saveUser(UserRegisterRequest request) {
 		User user = createUserEntity(request);
 		User saved = userRepository.save(user);
 		return toRegisterResponse(saved);
+	}
+
+	@Override
+	public Page<UserProfileResponse> searchProfiles(UserProfileRequest request, Pageable pageable) {
+		return userRepository.searchProfiles(request, pageable);
 	}
 }
