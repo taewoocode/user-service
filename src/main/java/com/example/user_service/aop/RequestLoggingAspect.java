@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -23,27 +22,94 @@ import lombok.extern.slf4j.Slf4j;
 @Aspect
 public class RequestLoggingAspect {
 
-	@Pointcut("within(com.example.user_service.user.controller..*)")
-	public void onRequest() {
+	@Pointcut("within(com.example.user_service..controller..*)")
+	public void controllerLayer() {
 	}
 
-	@Before("onRequest()")
-	public void logMethodCall(JoinPoint joinPoint) {
-		Signature signature = joinPoint.getSignature();
-		String methodName = joinPoint.getSignature().toShortString();
-		log.info("=================================================================================================");
-		log.info(" ==> Start: " + methodName);
+	@Pointcut("within(com.example.user_service..service..*)")
+	public void serviceLayer() {
 	}
 
-	@After("onRequest()")
-	public void logMethodExit(JoinPoint joinPoint) {
-		Signature signature = joinPoint.getSignature();
-		String methodName = joinPoint.getSignature().toShortString();
-		log.info(" ==> End: " + methodName);
-		log.info("=================================================================================================");
+	@Pointcut("within(com.example.user_service..repository..*)")
+	public void repositoryLayer() {
 	}
 
-	@Around("onRequest()")
+	// Controller 계층
+	@Before("controllerLayer()")
+	public void logController(JoinPoint joinPoint) {
+		log.info("[CONTROLLER] Start: {}", joinPoint.getSignature());
+	}
+
+	@After("controllerLayer()")
+	public void logControllerEnd(JoinPoint joinPoint) {
+		log.info("[CONTROLLER] End: {}", joinPoint.getSignature());
+	}
+
+	@Around("controllerLayer()")
+	public Object logControllerAround(ProceedingJoinPoint pjp) throws Throwable {
+		long start = System.currentTimeMillis();
+		try {
+			return pjp.proceed(pjp.getArgs());
+		} catch (Throwable ex) {
+			log.error("[CONTROLLER] EXCEPTION in {}: {}", pjp.getSignature(), ex.getMessage(), ex);
+			throw ex;
+		} finally {
+			long end = System.currentTimeMillis();
+			log.info("[CONTROLLER] Execution time for {}: {}ms", pjp.getSignature(), end - start);
+		}
+	}
+
+	// Service 계층
+	@Before("serviceLayer()")
+	public void logService(JoinPoint joinPoint) {
+		log.info("[SERVICE] Start: {}", joinPoint.getSignature());
+	}
+
+	@After("serviceLayer()")
+	public void logServiceEnd(JoinPoint joinPoint) {
+		log.info("[SERVICE] End: {}", joinPoint.getSignature());
+	}
+
+	@Around("serviceLayer()")
+	public Object logServiceAround(ProceedingJoinPoint pjp) throws Throwable {
+		long start = System.currentTimeMillis();
+		try {
+			return pjp.proceed(pjp.getArgs());
+		} catch (Throwable ex) {
+			log.error("[SERVICE] EXCEPTION in {}: {}", pjp.getSignature(), ex.getMessage(), ex);
+			throw ex;
+		} finally {
+			long end = System.currentTimeMillis();
+			log.info("[SERVICE] Execution time for {}: {}ms", pjp.getSignature(), end - start);
+		}
+	}
+
+	// Repository 계층
+	@Before("repositoryLayer()")
+	public void logRepository(JoinPoint joinPoint) {
+		log.info("[REPOSITORY] Start: {}", joinPoint.getSignature());
+	}
+
+	@After("repositoryLayer()")
+	public void logRepositoryEnd(JoinPoint joinPoint) {
+		log.info("[REPOSITORY] End: {}", joinPoint.getSignature());
+	}
+
+	@Around("repositoryLayer()")
+	public Object logRepositoryAround(ProceedingJoinPoint pjp) throws Throwable {
+		long start = System.currentTimeMillis();
+		try {
+			return pjp.proceed(pjp.getArgs());
+		} catch (Throwable ex) {
+			log.error("[REPOSITORY] EXCEPTION in {}: {}", pjp.getSignature(), ex.getMessage(), ex);
+			throw ex;
+		} finally {
+			long end = System.currentTimeMillis();
+			log.info("[REPOSITORY] Execution time for {}: {}ms", pjp.getSignature(), end - start);
+		}
+	}
+
+	@Around("within(com.example.user_service..controller..*)")
 	public Object doLogging(ProceedingJoinPoint pjp) throws Throwable {
 		HttpServletRequest request = ((ServletRequestAttributes)RequestContextHolder.currentRequestAttributes()).getRequest();
 		Map<String, String[]> paramMap = request.getParameterMap();
@@ -56,6 +122,9 @@ public class RequestLoggingAspect {
 		long start = System.currentTimeMillis();
 		try {
 			return pjp.proceed(pjp.getArgs());
+		} catch (Throwable ex) {
+			log.error("EXCEPTION in {}: {}", pjp.getSignature(), ex.getMessage(), ex);
+			throw ex;
 		} finally {
 			long end = System.currentTimeMillis();
 			log.info("Request: {} {} {} < {} ({}ms)",
