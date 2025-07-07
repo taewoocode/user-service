@@ -44,6 +44,9 @@ dependencies {
 
     testCompileOnly 'org.projectlombok:lombok'
 
+    // WebClient (Spring WebFlux)
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
 }
 
 tasks.named('test') {

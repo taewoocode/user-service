@@ -1,5 +1,6 @@
 package com.example.user_service.user.service;
 
+import static com.example.user_service.user.dto.UserProfileDetailInfo.*;
 import static com.example.user_service.user.dto.UserProfileInfo.*;
 import static com.example.user_service.user.dto.UserRegisterInfo.*;
 import static com.example.user_service.user.service.UserConverter.*;
@@ -35,8 +36,24 @@ public class UserServiceImpl implements UserService {
 		return toRegisterResponse(saved);
 	}
 
+	/**
+	 * 유저 목록 반환
+	 * @param request
+	 * @param pageable
+	 * @return
+	 */
 	@Override
 	public Page<UserProfileResponse> searchProfiles(UserProfileRequest request, Pageable pageable) {
 		return userRepository.searchProfiles(request, pageable);
+	}
+
+	/**
+	 * User 프로필 상세 조회
+	 * @param request
+	 * @return
+	 */
+	@Override
+	public UserProfileDetailResponse getUserProfileDetail(UserProfileDetailRequest request) {
+		return userRepository.findAndIncreaseViewCount(request.getUserId());
 	}
 }

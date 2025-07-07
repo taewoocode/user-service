@@ -26,6 +26,12 @@ spring:
         org.hibernate.SQL: debug
         org.hibernate.type: trace
 
+toss:
+  payments:
+    client-key: ${TOSS_CLIENT_KEY}
+    secret-key: ${TOSS_SECRET_KEY}
+    security-key: ${TOSS_SECURITY_KEY}
+
 server:
   port: 8080
 
