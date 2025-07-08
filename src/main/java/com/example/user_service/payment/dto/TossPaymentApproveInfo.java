@@ -7,31 +7,31 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class PaymentPrepareInfo {
-
+public class TossPaymentApproveInfo {
 	@Getter
-	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class PaymentPrepareRequest {
-		private Long userId;
-		private Integer amount;
-		private String paymentMethod;
-		private String orderId;
-		private String successUrl;
-		private String failUrl;
-	}
-
-	@Getter
 	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
-	public static class PaymentPrepareResponse {
+	public static class PaymentApproveRequest {
 		private String paymentKey;
-		private String paymentUrl;
 		private String orderId;
-		private LocalDateTime expiredAt;
-		private String paymentStatus;
-		private String status;
+		private Long amount;
+		private Long userId;
+		private String paymentMethod;
+		private String couponCode;
 	}
-} 
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class TossPaymentApproveResponse {
+		private String paymentKey;
+		private String orderId;
+		private Long amount;
+		private String paymentStatus;
+		private LocalDateTime approvedAt;
+		private String paymentMethod;
+		private String couponCode;
+	}
+}

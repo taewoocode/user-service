@@ -2,23 +2,27 @@ package com.example.user_service.payment.service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import com.example.user_service.config.TossPaymentProperties;
 import com.example.user_service.exception.PaymentNotFoundException;
 import com.example.user_service.payment.domain.Coupon;
+import com.example.user_service.payment.domain.KakaoPaymentStatus;
 import com.example.user_service.payment.domain.Payment;
-import com.example.user_service.payment.domain.TossPaymentStatus;
-import com.example.user_service.payment.dto.TossPaymentApproveInfo;
-import com.example.user_service.payment.dto.TossPaymentCancelInfo;
-import com.example.user_service.payment.dto.TossPaymentPrepareInfo;
+import com.example.user_service.payment.domain.PaymentMethod;
+import com.example.user_service.payment.dto.KakaoPaymentApproveInfo.KakaoPaymentApproveRequest;
+import com.example.user_service.payment.dto.KakaoPaymentApproveInfo.KakaoPaymentApproveResponse;
+import com.example.user_service.payment.dto.KakaoPaymentCancelInfo.KakaoPaymentCancelRequest;
+import com.example.user_service.payment.dto.KakaoPaymentCancelInfo.KakaoPaymentCancelResponse;
+import com.example.user_service.payment.dto.KakaoPaymentPrepareInfo.KakaoPaymentPrepareRequest;
+import com.example.user_service.payment.dto.KakaoPaymentPrepareInfo.KakaoPaymentPrepareResponse;
 import com.example.user_service.payment.repository.CouponRepository;
 import com.example.user_service.payment.repository.PaymentRepository;
 import com.example.user_service.payment.util.PaymentConverter;
 import com.example.user_service.point.dto.PointChargeInfo.PointChargeRequest;
 import com.example.user_service.point.dto.PointChargeInfo.PointChargeResponse;
-import com.example.user_service.point.repository.PointRepository;
 import com.example.user_service.point.service.PointService;
 import com.example.user_service.user.domain.User;
 import com.example.user_service.user.repository.UserRepository;
@@ -26,41 +30,52 @@ import com.example.user_service.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
-public class TossPaymentService implements PaymentService {
+public class KakaoPaymentServiceImpl implements KakaoPaymentService {
 	private final PaymentRepository paymentRepository;
-	private final PointRepository pointRepository;
 	private final UserRepository userRepository;
-	private final TossPaymentProperties tossPaymentProperties;
 	private final PointService pointService;
 	private final CouponService couponService;
 	private final CouponRepository couponRepository;
+	private final WebClient webClient;
+
+	public KakaoPaymentServiceImpl(PaymentRepository paymentRepository,
+								   UserRepository userRepository,
+								   PointService pointService,
+								   CouponService couponService,
+								   CouponRepository couponRepository,
+								   @Qualifier("kakaoPayWebClient") WebClient webClient) {
+		this.paymentRepository = paymentRepository;
+		this.userRepository = userRepository;
+		this.pointService = pointService;
+		this.couponService = couponService;
+		this.couponRepository = couponRepository;
+		this.webClient = webClient;
+	}
 
 	@Transactional
-	public TossPaymentPrepareInfo.TossPaymentPrepareResponse requestPayment(
-		TossPaymentPrepareInfo.TossPaymentPrepareRequest request) {
-		String paymentKey = "TOSS-" + System.currentTimeMillis();
-		String baseUrl = tossPaymentProperties.getClientKey(); // 실제로는 baseUrl, clientKey 등 활용
-		String paymentUrl = baseUrl + "/mock/" + paymentKey;
-
+	@Override
+	public KakaoPaymentPrepareResponse requestPayment(KakaoPaymentPrepareRequest request) {
+		String paymentKey = "KAKAO-" + System.currentTimeMillis();
 		User user = userRepository.findById(request.getUserId())
 			.orElseThrow(() -> new PaymentNotFoundException("유저 정보 없음"));
-		Payment payment = PaymentConverter.createPaymentEntity(null, paymentKey, user);
+		Payment payment = PaymentConverter.createPaymentEntity(
+			request.getPaymentMethod() != null ? PaymentMethod.valueOf(request.getPaymentMethod()) : null,
+			paymentKey, user);
 		payment.request();
 		paymentRepository.save(payment);
-		return TossPaymentPrepareInfo.TossPaymentPrepareResponse.builder()
+		return KakaoPaymentPrepareResponse.builder()
 			.paymentKey(paymentKey)
-			.paymentUrl(paymentUrl)
+			.paymentUrl("/mock/kakao/" + paymentKey)
 			.orderId(request.getOrderId())
 			.expiredAt(LocalDateTime.now().plusMinutes(15))
-			.paymentStatus(TossPaymentStatus.REQUESTED.name())
+			.paymentStatus(KakaoPaymentStatus.READY.name())
 			.status("READY")
 			.build();
 	}
 
 	@Transactional
-	public TossPaymentApproveInfo.TossPaymentApproveResponse approvePayment(
-		TossPaymentApproveInfo.PaymentApproveRequest request) {
+	@Override
+	public KakaoPaymentApproveResponse approvePayment(KakaoPaymentApproveRequest request) {
 		Payment payment = paymentRepository.findByPaymentKey(request.getPaymentKey());
 		if (payment == null) {
 			throw new PaymentNotFoundException("결제 정보 없음");
@@ -72,8 +87,7 @@ public class TossPaymentService implements PaymentService {
 		long discount = 0L;
 		Coupon coupon = null;
 		if (request.getCouponCode() != null && !request.getCouponCode().isEmpty()) {
-			coupon = couponRepository.findByCode(request.getCouponCode())
-				.orElse(null);
+			coupon = couponRepository.findByCode(request.getCouponCode()).orElse(null);
 			if (coupon != null) {
 				discount = couponService.calculateDiscountAmount(coupon, originalAmount);
 				couponService.useCoupon(request.getUserId(), coupon.getCode(), payment.getId());
@@ -83,19 +97,18 @@ public class TossPaymentService implements PaymentService {
 		if (finalAmount < 0)
 			finalAmount = 0;
 
-		// 포인트 적립
 		PointChargeRequest pointRequest = PointChargeRequest.builder()
 			.userId(request.getUserId())
 			.amount(finalAmount)
-			.paymentMethod(null) // 필요시 변환
+			.paymentMethod(null)
 			.build();
 		PointChargeResponse pointResponse = pointService.chargePoint(pointRequest);
 
-		return TossPaymentApproveInfo.TossPaymentApproveResponse.builder()
+		return KakaoPaymentApproveResponse.builder()
 			.paymentKey(request.getPaymentKey())
 			.orderId(request.getOrderId())
 			.amount(finalAmount)
-			.paymentStatus("APPROVED")
+			.paymentStatus(KakaoPaymentStatus.APPROVED.name())
 			.approvedAt(LocalDateTime.now())
 			.paymentMethod(request.getPaymentMethod())
 			.couponCode(request.getCouponCode())
@@ -103,18 +116,18 @@ public class TossPaymentService implements PaymentService {
 	}
 
 	@Transactional
-	public TossPaymentCancelInfo.TossPaymentCancelResponse cancelPayment(
-		TossPaymentCancelInfo.TossPaymentCancelRequest request) {
+	@Override
+	public KakaoPaymentCancelResponse cancelPayment(KakaoPaymentCancelRequest request) {
 		Payment payment = paymentRepository.findByPaymentKey(request.getPaymentKey());
 		if (payment == null) {
 			throw new PaymentNotFoundException("결제 정보 없음");
 		}
 		payment.cancel();
 		paymentRepository.save(payment);
-		return TossPaymentCancelInfo.TossPaymentCancelResponse.builder()
+		return KakaoPaymentCancelResponse.builder()
 			.paymentKey(request.getPaymentKey())
 			.orderId(request.getOrderId())
-			.cancelStatus("CANCELLED")
+			.cancelStatus(KakaoPaymentStatus.CANCELLED.name())
 			.canceledAt(LocalDateTime.now())
 			.build();
 	}
