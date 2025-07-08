@@ -5,50 +5,40 @@ import java.time.LocalDateTime;
 import com.example.user_service.user.domain.User;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "points")
+@Table(name = "point_history")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Point {
-
+@AllArgsConstructor
+@Builder
+public class PointHistory {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private Long balance;
-
-	@OneToOne
-	@JoinColumn(name = "user_id", nullable = false, unique = true)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
 	private User user;
 
-	private LocalDateTime updatedAt;
+	private Integer amount;
 
-	public void charge(Long amount) {
-		this.balance += amount;
-		this.updatedAt = LocalDateTime.now();
-	}
+	@Enumerated(EnumType.STRING)
+	private PointHistoryType type;
 
-	public Point(User user, Long balance) {
-		this.user = user;
-		this.balance = balance;
-		this.updatedAt = LocalDateTime.now();
-	}
-
-	public void setUser(User user) {
-		this.user = user;
-	}
-
-	public void setBalance(Long balance) {
-		this.balance = balance;
-	}
+	private LocalDateTime createdAt;
 }
