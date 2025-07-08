@@ -37,4 +37,18 @@ public class Point {
 		this.balance += amount;
 		this.updatedAt = LocalDateTime.now();
 	}
+
+	public Point(User user, Long balance) {
+		this.user = user;
+		this.balance = balance;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	public void setBalance(Long balance) {
+		this.balance = balance;
+	}
 }
