@@ -6,11 +6,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.user_service.point.domain.Point;
 import com.example.user_service.point.domain.PointHistory;
 import com.example.user_service.point.domain.PointHistoryType;
 import com.example.user_service.point.dto.PointChargeInfo.PointChargeRequest;
 import com.example.user_service.point.dto.PointChargeInfo.PointChargeResponse;
 import com.example.user_service.point.repository.PointHistoryRepository;
+import com.example.user_service.point.repository.PointRepository;
 import com.example.user_service.user.domain.User;
 import com.example.user_service.user.repository.UserRepository;
 
@@ -21,8 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class PointServiceImpl implements PointService {
 	private final PointHistoryRepository pointHistoryRepository;
 	private final UserRepository userRepository;
-
-	// 결제 승인 결과를 받아 포인트 적립만 책임
+	private final PointRepository pointRepository;
+	
 	@Transactional
 	@Override
 	public PointChargeResponse chargePoint(PointChargeRequest request) {
@@ -51,6 +53,13 @@ public class PointServiceImpl implements PointService {
 	public void addPoint(Long userId, Long amount) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new UsernameNotFoundException("유저 없음"));
+		Point point = pointRepository.findByUserId(userId);
+		if (point == null) {
+			point = new Point(user, 0L);
+		}
+		point.charge(amount);
+
+		pointRepository.save(point);
 		PointHistory history = PointHistory.builder()
 			.user(user)
 			.amount(amount != null ? amount.intValue() : null)
