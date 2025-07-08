@@ -43,7 +43,7 @@ public class TossPaymentService implements PaymentService {
 
 		User user = userRepository.findById(request.getUserId())
 			.orElseThrow(() -> new PaymentNotFoundException("결제 정보 없음"));
-		Payment payment = PaymentConverter.toPayment(request, paymentKey, user);
+		Payment payment = PaymentConverter.createPaymentEntity(request, paymentKey, user);
 
 		payment.request();
 		paymentRepository.save(payment);
