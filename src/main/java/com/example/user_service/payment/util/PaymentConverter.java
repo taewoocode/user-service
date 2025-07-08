@@ -1,8 +1,8 @@
 package com.example.user_service.payment.util;
 
-import static com.example.user_service.payment.dto.PaymentApproveInfo.*;
-import static com.example.user_service.payment.dto.PaymentCancelInfo.*;
-import static com.example.user_service.payment.dto.PaymentPrepareInfo.*;
+import static com.example.user_service.payment.dto.TossPaymentApproveInfo.*;
+import static com.example.user_service.payment.dto.TossPaymentCancelInfo.*;
+import static com.example.user_service.payment.dto.TossPaymentPrepareInfo.*;
 
 import java.time.LocalDateTime;
 
@@ -11,30 +11,26 @@ import com.example.user_service.payment.domain.PaymentMethod;
 import com.example.user_service.user.domain.User;
 
 public class PaymentConverter {
-	public static Payment createPaymentEntity(PaymentPrepareRequest request, String paymentKey,
-		User user) {
+	public static Payment createPaymentEntity(PaymentMethod paymentMethod, String paymentKey, User user) {
 		return Payment.builder()
 			.paymentKey(paymentKey)
-			.orderId(request.getOrderId())
-			.amount(request.getAmount() != null ? request.getAmount().longValue() : null)
+			.paymentMethod(paymentMethod)
 			.user(user)
-			.paymentMethod(
-				request.getPaymentMethod() != null ? PaymentMethod.valueOf(request.getPaymentMethod()) : null)
 			.build();
 	}
 
-	public static PaymentPrepareResponse createPropsResponse(
-		PaymentPrepareRequest request, String paymentKey, String baseUrl) {
-		return PaymentPrepareResponse.builder()
+	public static TossPaymentPrepareResponse createPropsResponse(
+		TossPaymentPrepareRequest request, String paymentKey, String baseUrl) {
+		return TossPaymentPrepareResponse.builder()
 			.paymentKey(paymentKey)
 			.orderId(request.getOrderId())
 			.paymentUrl(baseUrl + "/pay/" + paymentKey)
 			.build();
 	}
 
-	public static PaymentApproveResponse toApproveResponse(Payment payment,
+	public static TossPaymentApproveResponse toApproveResponse(Payment payment,
 		PaymentApproveRequest request, LocalDateTime now) {
-		return PaymentApproveResponse.builder()
+		return TossPaymentApproveResponse.builder()
 			.paymentKey(payment.getPaymentKey())
 			.orderId(payment.getOrderId())
 			.amount(payment.getAmount())
@@ -45,9 +41,9 @@ public class PaymentConverter {
 			.build();
 	}
 
-	public static PaymentCancelResponse toCancelResponse(Payment payment,
-		PaymentCancelRequest request, LocalDateTime now) {
-		return PaymentCancelResponse.builder()
+	public static TossPaymentCancelResponse toCancelResponse(Payment payment,
+		TossPaymentCancelRequest request, LocalDateTime now) {
+		return TossPaymentCancelResponse.builder()
 			.paymentKey(payment.getPaymentKey())
 			.orderId(payment.getOrderId())
 			.cancelStatus(payment.getPaymentStatus())
