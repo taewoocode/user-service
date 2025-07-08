@@ -7,12 +7,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class PaymentCancelInfo {
+public class TossPaymentCancelInfo {
 	@Getter
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class PaymentCancelRequest {
+	public static class TossPaymentCancelRequest {
 		private String paymentKey;
 		private String cancelReason;
 		private Long cancelAmount;
@@ -23,7 +23,7 @@ public class PaymentCancelInfo {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class PaymentCancelResponse {
+	public static class TossPaymentCancelResponse {
 		private String paymentKey;
 		private String orderId;
 		private String cancelStatus;

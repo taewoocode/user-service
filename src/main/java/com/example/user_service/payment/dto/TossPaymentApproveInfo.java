@@ -1,12 +1,13 @@
 package com.example.user_service.payment.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 
-public class PaymentApproveInfo {
+public class TossPaymentApproveInfo {
 	@Getter
 	@NoArgsConstructor
 	@AllArgsConstructor
@@ -24,7 +25,7 @@ public class PaymentApproveInfo {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	@Builder
-	public static class PaymentApproveResponse {
+	public static class TossPaymentApproveResponse {
 		private String paymentKey;
 		private String orderId;
 		private Long amount;
