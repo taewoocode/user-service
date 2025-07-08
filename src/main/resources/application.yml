@@ -32,6 +32,13 @@ toss:
     secret-key: ${TOSS_SECRET_KEY}
     security-key: ${TOSS_SECURITY_KEY}
 
+kakao:
+  pay:
+    admin-key: ${KAKAOPAY_ADMIN_KEY}
+    secret-key: ${KAKAOPAY_SECRET_KEY}
+
+
+
 server:
   port: 8080
 
