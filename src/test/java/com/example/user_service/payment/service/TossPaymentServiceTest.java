@@ -20,6 +20,8 @@ import com.example.user_service.payment.client.TossApiClient;
 import com.example.user_service.payment.domain.Payment;
 import com.example.user_service.payment.repository.PaymentRepository;
 import com.example.user_service.payment.util.PaymentConverter;
+import com.example.user_service.payment.dto.PaymentApproveInfo.PaymentApproveRequest;
+import com.example.user_service.payment.dto.PaymentApproveInfo.PaymentApproveResponse;
 import com.example.user_service.point.service.PointService;
 import com.example.user_service.user.domain.User;
 import com.example.user_service.user.repository.UserRepository;
@@ -81,6 +83,44 @@ class TossPaymentServiceTest {
 			verify(mockPayment).request();
 			verify(paymentRepository).save(mockPayment);
 			verify(tossApiClient).requestPayment(any(), any());
+		}
+	}
+
+	@Test
+	@DisplayName("결제 승인 성공 시: 결제 금액만큼 포인트가 적립된다.")
+	void approvePayment_success_shouldChargePoint() {
+		// given
+		Long userId = 1L;
+		Long amount = 5000L;
+		String paymentKey = "TOSS_APPROVE_KEY";
+		String orderId = "ORDER_456";
+		User user = new User("taewoo", "taewoo@t.com", "pw", 0);
+		Payment payment = mock(Payment.class);
+		when(paymentRepository.findByPaymentKey(paymentKey)).thenReturn(payment);
+		when(payment.getOrderId()).thenReturn(orderId);
+		when(payment.getUser()).thenReturn(user);
+		when(payment.getAmount()).thenReturn(amount);
+
+		PaymentApproveRequest request = PaymentApproveRequest.builder()
+			.paymentKey(paymentKey)
+			.orderId(orderId)
+			.amount(amount)
+			.userId(userId)
+			.build();
+
+		try (MockedStatic<PaymentConverter> converterMock = mockStatic(PaymentConverter.class)) {
+			PaymentApproveResponse mockResponse = PaymentApproveResponse.builder().build();
+			converterMock.when(() -> PaymentConverter.toApproveResponse(eq(payment), eq(request), any(LocalDateTime.class)))
+				.thenReturn(mockResponse);
+
+			// when
+			PaymentApproveResponse response = tossPaymentService.approvePayment(request);
+
+			// then
+			assertNotNull(response);
+			verify(payment).approve();
+			verify(paymentRepository).save(payment);
+			verify(pointService).addPoint(userId, amount);
 		}
 	}
 
