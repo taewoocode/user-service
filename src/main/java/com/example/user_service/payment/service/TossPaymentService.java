@@ -10,9 +10,9 @@ import com.example.user_service.exception.PaymentNotFoundException;
 import com.example.user_service.payment.domain.Coupon;
 import com.example.user_service.payment.domain.Payment;
 import com.example.user_service.payment.domain.TossPaymentStatus;
-import com.example.user_service.payment.dto.PaymentApproveInfo;
-import com.example.user_service.payment.dto.PaymentCancelInfo;
-import com.example.user_service.payment.dto.PaymentPrepareInfo;
+import com.example.user_service.payment.dto.TossPaymentApproveInfo;
+import com.example.user_service.payment.dto.TossPaymentCancelInfo;
+import com.example.user_service.payment.dto.TossPaymentPrepareInfo;
 import com.example.user_service.payment.repository.CouponRepository;
 import com.example.user_service.payment.repository.PaymentRepository;
 import com.example.user_service.payment.util.PaymentConverter;
@@ -37,7 +37,8 @@ public class TossPaymentService implements PaymentService {
 	private final CouponRepository couponRepository;
 
 	@Transactional
-	public PaymentPrepareInfo.PaymentPrepareResponse requestPayment(PaymentPrepareInfo.PaymentPrepareRequest request) {
+	public TossPaymentPrepareInfo.TossPaymentPrepareResponse requestPayment(
+		TossPaymentPrepareInfo.TossPaymentPrepareRequest request) {
 		String paymentKey = "TOSS-" + System.currentTimeMillis();
 		String baseUrl = tossPaymentProperties.getClientKey(); // 실제로는 baseUrl, clientKey 등 활용
 		String paymentUrl = baseUrl + "/mock/" + paymentKey;
@@ -47,7 +48,7 @@ public class TossPaymentService implements PaymentService {
 		Payment payment = PaymentConverter.createPaymentEntity(null, paymentKey, user);
 		payment.request();
 		paymentRepository.save(payment);
-		return PaymentPrepareInfo.PaymentPrepareResponse.builder()
+		return TossPaymentPrepareInfo.TossPaymentPrepareResponse.builder()
 			.paymentKey(paymentKey)
 			.paymentUrl(paymentUrl)
 			.orderId(request.getOrderId())
@@ -58,7 +59,8 @@ public class TossPaymentService implements PaymentService {
 	}
 
 	@Transactional
-	public PaymentApproveInfo.PaymentApproveResponse approvePayment(PaymentApproveInfo.PaymentApproveRequest request) {
+	public TossPaymentApproveInfo.TossPaymentApproveResponse approvePayment(
+		TossPaymentApproveInfo.PaymentApproveRequest request) {
 		Payment payment = paymentRepository.findByPaymentKey(request.getPaymentKey());
 		if (payment == null) {
 			throw new PaymentNotFoundException("결제 정보 없음");
@@ -89,7 +91,7 @@ public class TossPaymentService implements PaymentService {
 			.build();
 		PointChargeResponse pointResponse = pointService.chargePoint(pointRequest);
 
-		return PaymentApproveInfo.PaymentApproveResponse.builder()
+		return TossPaymentApproveInfo.TossPaymentApproveResponse.builder()
 			.paymentKey(request.getPaymentKey())
 			.orderId(request.getOrderId())
 			.amount(finalAmount)
@@ -101,14 +103,15 @@ public class TossPaymentService implements PaymentService {
 	}
 
 	@Transactional
-	public PaymentCancelInfo.PaymentCancelResponse cancelPayment(PaymentCancelInfo.PaymentCancelRequest request) {
+	public TossPaymentCancelInfo.TossPaymentCancelResponse cancelPayment(
+		TossPaymentCancelInfo.TossPaymentCancelRequest request) {
 		Payment payment = paymentRepository.findByPaymentKey(request.getPaymentKey());
 		if (payment == null) {
 			throw new PaymentNotFoundException("결제 정보 없음");
 		}
 		payment.cancel();
 		paymentRepository.save(payment);
-		return PaymentCancelInfo.PaymentCancelResponse.builder()
+		return TossPaymentCancelInfo.TossPaymentCancelResponse.builder()
 			.paymentKey(request.getPaymentKey())
 			.orderId(request.getOrderId())
 			.cancelStatus("CANCELLED")

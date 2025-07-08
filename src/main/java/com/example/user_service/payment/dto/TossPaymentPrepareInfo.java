@@ -7,13 +7,13 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-public class PaymentPrepareInfo {
+public class TossPaymentPrepareInfo {
 
 	@Getter
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class PaymentPrepareRequest {
+	public static class TossPaymentPrepareRequest {
 		private Long userId;
 		private Integer amount;
 		private String paymentMethod;
@@ -26,7 +26,7 @@ public class PaymentPrepareInfo {
 	@Builder
 	@NoArgsConstructor
 	@AllArgsConstructor
-	public static class PaymentPrepareResponse {
+	public static class TossPaymentPrepareResponse {
 		private String paymentKey;
 		private String paymentUrl;
 		private String orderId;

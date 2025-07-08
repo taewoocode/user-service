@@ -1,6 +1,6 @@
 package com.example.user_service.payment.service;
 
-import static com.example.user_service.payment.dto.PaymentPrepareInfo.*;
+import static com.example.user_service.payment.dto.TossPaymentPrepareInfo.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -20,8 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.user_service.config.TossPaymentProperties;
 import com.example.user_service.payment.domain.Coupon;
 import com.example.user_service.payment.domain.Payment;
-import com.example.user_service.payment.dto.PaymentApproveInfo.PaymentApproveRequest;
-import com.example.user_service.payment.dto.PaymentApproveInfo.PaymentApproveResponse;
+import com.example.user_service.payment.dto.TossPaymentApproveInfo.PaymentApproveRequest;
+import com.example.user_service.payment.dto.TossPaymentApproveInfo.TossPaymentApproveResponse;
 import com.example.user_service.payment.repository.CouponRepository;
 import com.example.user_service.payment.repository.PaymentRepository;
 import com.example.user_service.payment.util.PaymentConverter;
@@ -110,13 +110,13 @@ class TossPaymentServiceTest {
 			.build();
 
 		try (MockedStatic<PaymentConverter> converterMock = mockStatic(PaymentConverter.class)) {
-			PaymentApproveResponse mockResponse = PaymentApproveResponse.builder().build();
+			TossPaymentApproveResponse mockResponse = TossPaymentApproveResponse.builder().build();
 			converterMock.when(
 					() -> PaymentConverter.toApproveResponse(eq(payment), eq(request), any(LocalDateTime.class)))
 				.thenReturn(mockResponse);
 
 			// when
-			PaymentApproveResponse response = tossPaymentService.approvePayment(request);
+			TossPaymentApproveResponse response = tossPaymentService.approvePayment(request);
 
 			// then
 			assertNotNull(response);
@@ -158,7 +158,7 @@ class TossPaymentServiceTest {
 			.build();
 
 		// when
-		PaymentApproveResponse response = tossPaymentService.approvePayment(request);
+		TossPaymentApproveResponse response = tossPaymentService.approvePayment(request);
 
 		// then
 		assertThat(response.getAmount()).isEqualTo(25000L); // 30000 - 5000
@@ -187,7 +187,7 @@ class TossPaymentServiceTest {
 			.build();
 
 		// when
-		PaymentApproveResponse response = tossPaymentService.approvePayment(request);
+		TossPaymentApproveResponse response = tossPaymentService.approvePayment(request);
 
 		// then
 		assertThat(response.getAmount()).isEqualTo(10000L);
@@ -196,8 +196,8 @@ class TossPaymentServiceTest {
 		verify(couponService, never()).useCoupon(anyLong(), anyString(), anyLong());
 	}
 
-	private static PaymentPrepareResponse createPaymentResponse(String paymentKey) {
-		PaymentPrepareResponse mockResponse = PaymentPrepareResponse.builder()
+	private static TossPaymentPrepareResponse createPaymentResponse(String paymentKey) {
+		TossPaymentPrepareResponse mockResponse = TossPaymentPrepareResponse.builder()
 			.paymentKey(paymentKey)
 			.paymentUrl("https://toss.payments.com/redirect")
 			.orderId("ORDER_123")
@@ -208,8 +208,8 @@ class TossPaymentServiceTest {
 		return mockResponse;
 	}
 
-	private static PaymentPrepareRequest createPaymentRequest(Long userId) {
-		PaymentPrepareRequest request = PaymentPrepareRequest.builder()
+	private static TossPaymentPrepareRequest createPaymentRequest(Long userId) {
+		TossPaymentPrepareRequest request = TossPaymentPrepareRequest.builder()
 			.userId(userId)
 			.amount(10000)
 			.paymentMethod("CARD")
