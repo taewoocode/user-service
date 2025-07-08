@@ -64,7 +64,7 @@ class TossPaymentServiceTest {
 		when(tossApiClient.requestPayment(any(), any())).thenReturn(mockResponse);
 
 		try (MockedStatic<PaymentConverter> converterMock = mockStatic(PaymentConverter.class)) {
-			converterMock.when(() -> PaymentConverter.toPayment(eq(request), anyString(), eq(user)))
+			converterMock.when(() -> PaymentConverter.createPaymentEntity(eq(request), anyString(), eq(user)))
 				.thenReturn(mockPayment);
 			converterMock.when(() -> PaymentConverter.createPropsResponse(eq(request), anyString(), anyString()))
 				.thenReturn(mockResponse);
